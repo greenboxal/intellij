@@ -22,10 +22,10 @@ import com.android.tools.idea.res.ResourceClassRegistry;
 import com.android.tools.idea.res.ResourceIdManager;
 import com.android.tools.idea.res.ResourceRepositoryManager;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.idea.blaze.android.ResourceRepositoryManagerCompat;
+import com.google.idea.blaze.android.sync.importer.BlazeImportUtil;
+import com.google.idea.blaze.android.targetmap.ResourcePackageToTargetMap;
 import com.google.idea.blaze.base.command.buildresult.OutputArtifactResolver;
-import com.google.idea.blaze.base.ideinfo.AndroidIdeInfo;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
 import com.google.idea.blaze.base.ideinfo.TargetIdeInfo;
@@ -37,6 +37,7 @@ import com.google.idea.blaze.base.sync.data.BlazeProjectDataManager;
 import com.google.idea.blaze.base.targetmaps.SourceToTargetMap;
 import com.google.idea.blaze.java.sync.model.BlazeJarLibrary;
 import com.google.idea.blaze.java.sync.model.BlazeJavaSyncData;
+import com.google.idea.common.experiments.BoolExperiment;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
@@ -48,6 +49,7 @@ import com.intellij.openapi.roots.LibraryOrderEntry;
 import com.intellij.openapi.roots.OrderEntry;
 import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.roots.libraries.LibraryUtil;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.JarFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.ex.temp.TempFileSystem;
@@ -69,6 +71,9 @@ import org.jetbrains.annotations.Nullable;
  */
 public class PsiBasedClassFileFinder implements BlazeClassFileFinder {
   private static final Logger LOG = Logger.getInstance(PsiBasedClassFileFinder.class);
+
+  private static final BoolExperiment attachClassResourcePackage =
+      new BoolExperiment("aswb.psiclsfinder.attach.cls.r.package", true);
 
   private final Module module;
   private final Project project;
@@ -126,7 +131,8 @@ public class PsiBasedClassFileFinder implements BlazeClassFileFinder {
         classFile =
             findClassFileForSourceAndRegisterResourcePackage(projectData, virtualFile, fqcn);
       } else if (fileType == StdFileTypes.CLASS) {
-        classFile = findClassFileForIJarClass(projectData, virtualFile, fqcn);
+        classFile =
+            findClassFileForIJarClassAndRegisterResourcePackage(projectData, virtualFile, fqcn);
       }
 
       if (classFile != null) {
@@ -186,7 +192,7 @@ public class PsiBasedClassFileFinder implements BlazeClassFileFinder {
   }
 
   @Nullable
-  private VirtualFile findClassFileForIJarClass(
+  private VirtualFile findClassFileForIJarClassAndRegisterResourcePackage(
       BlazeProjectData projectData, VirtualFile ijarClass, String fqcn) {
     OrderEntry orderEntry = LibraryUtil.findLibraryEntry(ijarClass, project);
     if (!(orderEntry instanceof LibraryOrderEntry)) {
@@ -231,12 +237,36 @@ public class PsiBasedClassFileFinder implements BlazeClassFileFinder {
       return null;
     }
 
-    return findClassInJar(classJar, fqcn);
+    VirtualFile classFile = findClassInJar(classJar, fqcn);
+
+    // HACK START
+    // TODO(b/170994302): #as41 Remove this hack once as4.1 is gone
+    // This hack is required because as4.1 has a bug that accidentally clears ResourceRepository
+    // when it sees an R class for the first time. The next bit of code makes a best effort to
+    // re-register the R packages that might be accessed by Layout Editor.
+    // For a fqcn "com.foo.Bar$Baz", we want to register the R class "com.foo.R". We check if the
+    // project has any target that exports the package "com.foo" in the build graph, and register
+    // "com.foo" with ResourceRegistry.
+    // If the class is already present in ResourceRegistry, this step is a no-op as ResourceRegistry
+    // already de-duplicates classes.
+    if (attachClassResourcePackage.getValue() && classFile != null) {
+      int lastDotIdx = fqcn.lastIndexOf('.');
+      String rPackageRoot = fqcn.substring(0, lastDotIdx);
+      if (!ResourcePackageToTargetMap.get(project).containsKey(rPackageRoot)) {
+        registerResourcePackage(rPackageRoot);
+      }
+    }
+    // HACK END
+
+    return classFile;
   }
 
   private void registerResourcePackage(TargetIdeInfo resourceDependencyTarget) {
-    AndroidIdeInfo androidIdeInfo = resourceDependencyTarget.getAndroidIdeInfo();
-    if (androidIdeInfo == null || Strings.isNullOrEmpty(androidIdeInfo.getResourceJavaPackage())) {
+    registerResourcePackage(BlazeImportUtil.javaResourcePackageFor(resourceDependencyTarget));
+  }
+
+  private void registerResourcePackage(@Nullable String resourcePackage) {
+    if (StringUtil.isEmpty(resourcePackage)) {
       return;
     }
 
@@ -249,12 +279,12 @@ public class PsiBasedClassFileFinder implements BlazeClassFileFinder {
     }
 
     // TODO(namespaces)
-    ResourceNamespace namespace = ReadAction.compute(() -> repositoryManager.getNamespace());
+    ResourceNamespace namespace = ReadAction.compute(repositoryManager::getNamespace);
     ResourceClassRegistry.get(module.getProject())
         .addLibrary(
             ResourceRepositoryManagerCompat.getAppResources(repositoryManager),
             idManager,
-            androidIdeInfo.getResourceJavaPackage(),
+            resourcePackage,
             namespace);
   }
 
