@@ -76,6 +76,7 @@ intellij_plugin(
         "//scala:plugin_library",
         "//skylark:plugin_library",
         "//terminal:plugin_library",
+#        "//protobuf:plugin_library",
     ] + select_for_ide(
         intellij = [],
         intellij_ue = [

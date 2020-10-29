@@ -1,7 +1,7 @@
 workspace(name = "intellij_with_bazel")
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_jar")
 load("@bazel_tools//tools/build_defs/repo:jvm.bzl", "jvm_maven_import_external")
 
 # Long-lived download links available at: https://www.jetbrains.com/intellij-repository/releases
@@ -128,6 +128,20 @@ http_archive(
     ]),
     sha256 = "c020553701939692d165d3607dd94532f97c48d81435f1cb6d927a6723888327",
     url = "https://plugins.jetbrains.com/files/9568/97011/go-202.7319.50.zip",
+)
+
+# Go plugin for IntelliJ UE. Required at compile-time for Bazel integration.
+http_jar(
+    name = "protobuf_2020_1",
+    sha256 = "fddb53f07770c937cc4e59067bca119ab147d009aa13979b38b291a93a40cd7f",
+    url = "https://github.com/jvolkman/intellij-protobuf-editor/releases/download/v2.1.0/protobuf-editor.jar",
+)
+
+# Go plugin for IntelliJ UE. Required at compile-time for Bazel integration.
+http_jar(
+    name = "protobuf_2020_2",
+    sha256 = "fddb53f07770c937cc4e59067bca119ab147d009aa13979b38b291a93a40cd7f",
+    url = "https://github.com/jvolkman/intellij-protobuf-editor/releases/download/v2.1.0/protobuf-editor.jar",
 )
 
 # Scala plugin for IntelliJ CE. Required at compile-time for scala-specific features.

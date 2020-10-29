@@ -31,6 +31,11 @@ def get_go_import_path(ctx):
         import_path += "/" + ctx.label.name
     return import_path
 
+def get_proto_import_path(ctx, target):
+    """Returns the import path for a proto target."""
+
+    return target[ProtoInfo].proto_source_root
+
 def get_py_launcher(ctx):
     """Returns the python launcher for a given rule."""
     attr = ctx.rule.attr
@@ -43,6 +48,9 @@ semantics = struct(
     extra_deps = EXTRA_DEPS,
     go = struct(
         get_import_path = get_go_import_path,
+    ),
+    proto = struct(
+        get_import_path = get_proto_import_path,
     ),
     py = struct(
         get_launcher = get_py_launcher,
