@@ -1,6 +1,7 @@
 workspace(name = "intellij_with_bazel")
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_jar")
 load("@bazel_tools//tools/build_defs/repo:jvm.bzl", "jvm_maven_import_external")
 
 # Long-lived download links available at: https://www.jetbrains.com/intellij-repository/releases
@@ -97,7 +98,7 @@ http_archive(
         "    visibility = ['//visibility:public'],",
         ")",
     ]),
-    sha256 = "fa9524db2f5b6e42be559ffdab73a963ca06ca057e27a290f5665d38e581764a",
+    sha256 = "61eb876781f3fd75f2d9e76cac192672a02e008725ad9d7ac0fbd4e3dcf25b16",
     url = "https://plugins.jetbrains.com/files/7322/97141/python-ce-202.7319.64.zip",
 )
 
@@ -121,12 +122,26 @@ http_archive(
     build_file_content = "\n".join([
         "java_import(",
         "    name = 'go',",
-        "    jars = glob(['intellij-go/lib/*.jar']),",
+        "    jars = glob(['go/lib/*.jar']),",
         "    visibility = ['//visibility:public'],",
         ")",
     ]),
     sha256 = "c020553701939692d165d3607dd94532f97c48d81435f1cb6d927a6723888327",
     url = "https://plugins.jetbrains.com/files/9568/97011/go-202.7319.50.zip",
+)
+
+# Go plugin for IntelliJ UE. Required at compile-time for Bazel integration.
+http_jar(
+    name = "protobuf_2020_1",
+    sha256 = "fddb53f07770c937cc4e59067bca119ab147d009aa13979b38b291a93a40cd7f",
+    url = "https://github.com/jvolkman/intellij-protobuf-editor/releases/download/v2.1.0/protobuf-editor.jar",
+)
+
+# Go plugin for IntelliJ UE. Required at compile-time for Bazel integration.
+http_jar(
+    name = "protobuf_2020_2",
+    sha256 = "fddb53f07770c937cc4e59067bca119ab147d009aa13979b38b291a93a40cd7f",
+    url = "https://github.com/jvolkman/intellij-protobuf-editor/releases/download/v2.1.0/protobuf-editor.jar",
 )
 
 # Scala plugin for IntelliJ CE. Required at compile-time for scala-specific features.
@@ -162,8 +177,8 @@ http_archive(
 http_archive(
     name = "android_studio_4_1",
     build_file = "@//intellij_platform_sdk:BUILD.android_studio41",
-    sha256 = "4b9521fc4a6313ad65ff3e14b0f3fb50427d464fe14227555565f46e0ffad202",
-    url = "https://dl.google.com/dl/android/studio/ide-zips/4.1.0.19/android-studio-ide-201.6858069-linux.tar.gz",
+    sha256 = "68032184959c54576f119b7c7c8ded175d848374f3954fa450530d78260dd68b",
+    url = "https://dl.google.com/dl/android/studio/ide-zips/4.1.1.0/android-studio-ide-201.6953283-linux.tar.gz",
 )
 
 # The plugin api for Android Studio 4.2. This is required to build ASwB,
@@ -171,8 +186,8 @@ http_archive(
 http_archive(
     name = "android_studio_4_2",
     build_file = "@//intellij_platform_sdk:BUILD.android_studio42",
-    sha256 = "df9e33c751b9e7227168a2a87a2062c72fec06cd85c6054fc626950f5a363ab1",
-    url = "https://dl.google.com/dl/android/studio/ide-zips/4.2.0.7/android-studio-ide-201.6720134-linux.tar.gz",
+    sha256 = "d97874191e011d923aa1f772308da272bced236066887593fb56c4648679f081",
+    url = "https://dl.google.com/dl/android/studio/ide-zips/4.2.0.16/android-studio-ide-202.6939830-linux.tar.gz",
 )
 
 # LICENSE: Common Public License 1.0
@@ -262,6 +277,12 @@ jvm_maven_import_external(
     artifact_sha256 = "524b43ea15ca97c68f10d5f417c4068dc88144b620d2203f0910441a769fd42f",
     licenses = ["notice"],  # Apache 2.0
     server_urls = ["https://repo1.maven.org/maven2"],
+)
+
+git_repository(
+    name = "bazel",
+    branch = "master",
+    remote = "https://github.com/bazelbuild/bazel",
 )
 
 http_archive(

@@ -136,6 +136,12 @@ message GoIdeInfo {
   repeated string library_labels = 5;
 }
 
+message ProtoIdeInfo {
+  repeated ArtifactLocation sources = 1;
+  ArtifactLocation descriptor_set = 2;
+  string proto_source_root = 3;
+}
+
 message JsIdeInfo {
   repeated ArtifactLocation sources = 1;
 }
@@ -218,4 +224,5 @@ message TargetIdeInfo {
   TsIdeInfo ts_ide_info = 160;
   DartIdeInfo dart_ide_info = 170;
   KotlinToolchainIdeInfo kt_toolchain_ide_info = 180;
+  ProtoIdeInfo proto_ide_info = 190;
 }

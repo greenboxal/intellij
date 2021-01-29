@@ -397,6 +397,32 @@ def collect_go_info(target, ctx, semantics, ide_info, ide_info_file, output_grou
     update_sync_output_groups(output_groups, "intellij-resolve-go", depset(generated))
     return True
 
+def collect_proto_info(target, ctx, semantics, ide_info, ide_info_file, output_groups):
+    """Updates Proto-specific output groups, returns false if not a recognized Proto target."""
+    sources = []
+    generated = []
+
+    if ProtoInfo not in target:
+        return False
+
+    sources = target[ProtoInfo].direct_sources
+    descriptor_set = target[ProtoInfo].direct_descriptor_set
+    proto_source_root = target[ProtoInfo].proto_source_root
+
+    ide_info["proto_ide_info"] = struct_omit_none(
+        sources = [artifact_location(f) for f in sources],
+        descriptor_set = artifact_location(descriptor_set),
+        proto_source_root = proto_source_root,
+    )
+
+    compile_files = target[OutputGroupInfo].compilation_outputs if hasattr(target[OutputGroupInfo], "compilation_outputs") else depset([])
+    compile_files = depset(generated, transitive = [compile_files])
+
+    update_sync_output_groups(output_groups, "intellij-info-proto", depset([ide_info_file]))
+    update_sync_output_groups(output_groups, "intellij-compile-proto", compile_files)
+    update_sync_output_groups(output_groups, "intellij-resolve-proto", depset(generated))
+    return True
+
 def collect_cpp_info(target, ctx, semantics, ide_info, ide_info_file, output_groups):
     """Updates C++-specific output groups, returns false if not a C++ target."""
 
@@ -838,6 +864,7 @@ def _collect_aar_import_info(ctx, ide_info, ide_info_file, output_groups):
     ide_info["android_aar_ide_info"] = struct(
         aar = artifact_location(aar_file),
     )
+    update_sync_output_groups(output_groups, "intellij-resolve-android", depset([aar_file]))
     return True
 
 def build_test_info(ctx):
@@ -1031,6 +1058,7 @@ def intellij_info_aspect_impl(target, ctx, semantics):
     handled = collect_cpp_info(target, ctx, semantics, ide_info, ide_info_file, output_groups) or handled
     handled = collect_c_toolchain_info(target, ctx, semantics, ide_info, ide_info_file, output_groups) or handled
     handled = collect_go_info(target, ctx, semantics, ide_info, ide_info_file, output_groups) or handled
+    handled = collect_proto_info(target, ctx, semantics, ide_info, ide_info_file, output_groups) or handled
     handled = collect_java_info(target, ctx, semantics, ide_info, ide_info_file, output_groups) or handled
     handled = collect_java_toolchain_info(target, ide_info, ide_info_file, output_groups) or handled
     handled = collect_android_info(target, ctx, semantics, ide_info, ide_info_file, output_groups) or handled

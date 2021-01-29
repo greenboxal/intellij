@@ -47,6 +47,7 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
   @Nullable private final AndroidInstrumentationInfo androidInstrumentationInfo;
   @Nullable private final PyIdeInfo pyIdeInfo;
   @Nullable private final GoIdeInfo goIdeInfo;
+  @Nullable private final ProtoIdeInfo protoIdeInfo;
   @Nullable private final JsIdeInfo jsIdeInfo;
   @Nullable private final TsIdeInfo tsIdeInfo;
   @Nullable private final DartIdeInfo dartIdeInfo;
@@ -71,6 +72,7 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
       @Nullable AndroidInstrumentationInfo androidInstrumentationInfo,
       @Nullable PyIdeInfo pyIdeInfo,
       @Nullable GoIdeInfo goIdeInfo,
+      @Nullable ProtoIdeInfo protoIdeInfo,
       @Nullable JsIdeInfo jsIdeInfo,
       @Nullable TsIdeInfo tsIdeInfo,
       @Nullable DartIdeInfo dartIdeInfo,
@@ -93,6 +95,7 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
     this.androidInstrumentationInfo = androidInstrumentationInfo;
     this.pyIdeInfo = pyIdeInfo;
     this.goIdeInfo = goIdeInfo;
+    this.protoIdeInfo = protoIdeInfo;
     this.jsIdeInfo = jsIdeInfo;
     this.tsIdeInfo = tsIdeInfo;
     this.dartIdeInfo = dartIdeInfo;
@@ -139,6 +142,11 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
       goIdeInfo = GoIdeInfo.fromProto(proto.getGoIdeInfo(), key.getLabel(), kind);
       sourcesBuilder.addAll(goIdeInfo.getSources());
     }
+    ProtoIdeInfo protoIdeInfo = null;
+    if (proto.hasProtoIdeInfo()) {
+      protoIdeInfo = ProtoIdeInfo.fromProto(proto.getProtoIdeInfo(), key.getLabel(), kind);
+      sourcesBuilder.addAll(protoIdeInfo.getSources());
+    }
     JsIdeInfo jsIdeInfo = null;
     if (proto.hasJsIdeInfo()) {
       jsIdeInfo = JsIdeInfo.fromProto(proto.getJsIdeInfo());
@@ -184,6 +192,7 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
             : null,
         pyIdeInfo,
         goIdeInfo,
+        protoIdeInfo,
         jsIdeInfo,
         tsIdeInfo,
         dartIdeInfo,
@@ -216,6 +225,7 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
         builder::setAndroidInstrumentationInfo, androidInstrumentationInfo);
     ProtoWrapper.unwrapAndSetIfNotNull(builder::setPyIdeInfo, pyIdeInfo);
     ProtoWrapper.unwrapAndSetIfNotNull(builder::setGoIdeInfo, goIdeInfo);
+    ProtoWrapper.unwrapAndSetIfNotNull(builder::setProtoIdeInfo, protoIdeInfo);
     ProtoWrapper.unwrapAndSetIfNotNull(builder::setJsIdeInfo, jsIdeInfo);
     ProtoWrapper.unwrapAndSetIfNotNull(builder::setTsIdeInfo, tsIdeInfo);
     ProtoWrapper.unwrapAndSetIfNotNull(builder::setDartIdeInfo, dartIdeInfo);
@@ -251,6 +261,7 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
         androidInstrumentationInfo,
         pyIdeInfo,
         goIdeInfo,
+        protoIdeInfo,
         jsIdeInfo,
         tsIdeInfo,
         dartIdeInfo,
@@ -328,6 +339,11 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
   @Nullable
   public GoIdeInfo getGoIdeInfo() {
     return goIdeInfo;
+  }
+
+  @Nullable
+  public ProtoIdeInfo getProtoIdeInfo() {
+    return protoIdeInfo;
   }
 
   @Nullable
@@ -412,6 +428,7 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
     private AndroidInstrumentationInfo androidInstrumentationInfo;
     private PyIdeInfo pyIdeInfo;
     private GoIdeInfo goIdeInfo;
+    private ProtoIdeInfo protoIdeInfo;
     private JsIdeInfo jsIdeInfo;
     private TsIdeInfo tsIdeInfo;
     private DartIdeInfo dartIdeInfo;
@@ -497,6 +514,11 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
       return this;
     }
 
+    public Builder setProtoInfo(ProtoIdeInfo.Builder protoInfo) {
+      this.protoIdeInfo = protoInfo.build();
+      return this;
+    }
+
     public Builder setJsInfo(JsIdeInfo.Builder jsInfo) {
       this.jsIdeInfo = jsInfo.build();
       return this;
@@ -574,6 +596,7 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
           androidInstrumentationInfo,
           pyIdeInfo,
           goIdeInfo,
+          protoIdeInfo,
           jsIdeInfo,
           tsIdeInfo,
           dartIdeInfo,
@@ -608,6 +631,7 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
         && Objects.equals(androidInstrumentationInfo, that.androidInstrumentationInfo)
         && Objects.equals(pyIdeInfo, that.pyIdeInfo)
         && Objects.equals(goIdeInfo, that.goIdeInfo)
+        && Objects.equals(protoIdeInfo, that.protoIdeInfo)
         && Objects.equals(jsIdeInfo, that.jsIdeInfo)
         && Objects.equals(tsIdeInfo, that.tsIdeInfo)
         && Objects.equals(dartIdeInfo, that.dartIdeInfo)
@@ -635,6 +659,7 @@ public final class TargetIdeInfo implements ProtoWrapper<IntellijIdeInfo.TargetI
         androidInstrumentationInfo,
         pyIdeInfo,
         goIdeInfo,
+        protoIdeInfo,
         jsIdeInfo,
         tsIdeInfo,
         dartIdeInfo,
